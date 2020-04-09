@@ -38,14 +38,15 @@ wss.on('connection', function connection(ws, req) {
     try {
     console.log(`Received message => ${message}`)
     console.log('received from ' + userID + ': ' + message)
-    
 
-    var toUserWebSocket = webSockets[userID]
-    console.log(toUserWebSocket)
+
+    // var toUserWebSocket = webSockets[userID]
+    // console.log(toUserWebSocket)
 
     for (var clientId in websocketIds) {
         if (clientId != userID) {
-          webSockets[clientId].send(message)
+          console.log("Sending to id " + clientId)
+          websocketIds[clientId].send(message)
         }
     }
     // if (toUserWebSocket) {
