@@ -38,8 +38,8 @@ wss.on('connection', function connection(ws, req) {
     try {
     console.log(`Received message => ${message}`)
     console.log('received from ' + userID + ': ' + message)
-    // var messageArray = JSON.parse(message)
-    console.log(messageArray)
+    
+
     var toUserWebSocket = webSockets[userID]
     console.log(toUserWebSocket)
 
