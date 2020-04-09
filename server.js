@@ -22,7 +22,7 @@ wss.on('connection', function connection(ws, req) {
   // console.log(ws)
   console.log('Client connected');
   webSockets[userID] = ws
-  websocketIds.append(userID)
+  websocketIds.push(userID)
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(webSockets))
   //
   // if (userID == 1) {
