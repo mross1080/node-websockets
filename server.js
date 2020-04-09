@@ -23,15 +23,25 @@ wss.on('connection', function connection(ws, req) {
 
 
   ws.on('message', message => {
+
+    try {
     console.log(`Received message => ${message}`)
     console.log('received from ' + userID + ': ' + message)
     var messageArray = JSON.parse(message)
+    console.log(messageArray)
     var toUserWebSocket = webSockets[messageArray[0]]
+    console.log(toUserWebSocket)
+
     if (toUserWebSocket) {
       console.log('sent to ' + messageArray[0] + ': ' + JSON.stringify(messageArray))
       messageArray[0] = userID
       toUserWebSocket.send(JSON.stringify(messageArray))
     }
+  } catch(e) {
+
+    console.log(e)
+
+  }
   })
   ws.on('close', () => console.log('Client disconnected'));
 });
