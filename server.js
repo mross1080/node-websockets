@@ -2,7 +2,7 @@
 
 const express = require('express');
 const { Server } = require('ws');
-
+console.log("Starting Server")
 const PORT = process.env.PORT || 3000;
 const INDEX = '/index.html';
 
@@ -18,6 +18,7 @@ wss.on('connection', (ws) => {
 });
 
 wss.on("message", (ws) => {
+  console.log("got message!!")
   ws.clients.forEach((client) => {
     client.send(new Date().toTimeString());
   });
