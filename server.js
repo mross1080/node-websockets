@@ -17,8 +17,8 @@ wss.on('connection', (ws) => {
   ws.on('close', () => console.log('Client disconnected'));
 });
 
-wss.on("message", (ws) {
-  wss.clients.forEach((client) => {
+wss.on("message", (ws) => {
+  ws.clients.forEach((client) => {
     client.send(new Date().toTimeString());
   });
 
