@@ -13,13 +13,24 @@ const server = express()
 
 const wss = new Server({ server });
 
+
+
+let websocketIds = []
 wss.on('connection', function connection(ws, req) {
   var userID = parseInt(req.url.substr(1), 10)
   console.log(req.url)
   // console.log(ws)
   console.log('Client connected');
   webSockets[userID] = ws
+  websocketIds.append(userID)
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(webSockets))
+  //
+  // if (userID == 1) {
+  //
+  //   webSockets["tester"] = ws
+  // } else {
+  //   webSockets["host"] = ws
+  // }
 
 
   ws.on('message', message => {
@@ -27,16 +38,21 @@ wss.on('connection', function connection(ws, req) {
     try {
     console.log(`Received message => ${message}`)
     console.log('received from ' + userID + ': ' + message)
-    var messageArray = JSON.parse(message)
+    // var messageArray = JSON.parse(message)
     console.log(messageArray)
-    var toUserWebSocket = webSockets[messageArray[0]]
+    var toUserWebSocket = webSockets[userID]
     console.log(toUserWebSocket)
 
-    if (toUserWebSocket) {
-      console.log('sent to ' + messageArray[0] + ': ' + JSON.stringify(messageArray))
-      messageArray[0] = userID
-      toUserWebSocket.send(JSON.stringify(messageArray))
+    for (var clientId in websocketIds) {
+        if (clientId != userID) {
+          webSockets[clientId].send(message)
+        }
     }
+    // if (toUserWebSocket) {
+    //   console.log('sent to ' + messageArray[0] + ': ' + JSON.stringify(messageArray))
+    //   messageArray[0] = userID
+    //   toUserWebSocket.send(JSON.stringify(messageArray))
+    // }
   } catch(e) {
 
     console.log(e)
