@@ -6,7 +6,7 @@
       let el;
 
       ws.onopen = function (event) {
-  socketServer.send("Hello From the node server!!");
+  ws.send("Hello From the node server!!");
 };
 
       ws.onmessage = (event) => {
