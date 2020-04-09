@@ -15,6 +15,8 @@ const wss = new Server({ server });
 
 wss.on('connection', function connection(ws, req) {
   var userID = parseInt(req.url.substr(1), 10)
+  console.log(req.url)
+  // console.log(ws)
   console.log('Client connected');
   webSockets[userID] = ws
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(webSockets))

@@ -2,7 +2,7 @@
   <head>
     <script>
       let HOST = location.origin.replace(/^http/, 'ws')
-      let ws = new WebSocket(HOST);
+      let ws = new WebSocket(HOST + "/2");
       let el;
 
       ws.onopen = function (event) {
