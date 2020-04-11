@@ -13,10 +13,27 @@
         el = document.getElementById('server-time');
         el.innerHTML = 'Server time: ' + event.data;
       };
+
+
     </script>
+
+
+          <link rel="stylesheet" href="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.css">
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   </head>
   <body>
+    <span class="switch">
+  <input type="checkbox" id="switch-1">
+  <label for="switch-1">Switch 1</label>
+</span>
+
+<span class="switch">
+  <input type="checkbox" id="switch-2" checked>
+  <label for="switch-2">Switch 2</label>
+</span>
     <h1>Web Socket Front End</h1>
     <p id="server-time"></p>
+    <script src="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.js"></script>
+
   </body>
 </html>
