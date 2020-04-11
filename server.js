@@ -23,15 +23,19 @@ const wss = new Server({
 
 let websocketIds = []
 wss.on('connection', function connection(ws, req) {
-  var userID = parseInt(req.url.substr(1), 10)
-  console.log(req.url)
+  var userID = req.url.split("/")[1]
+  console.log("Incoming url is " + req.url)
   // console.log(ws)
   console.log('Client connected');
+  console.log("User ID : " + userID)
+  if (userID != null) {
   webSockets[userID] = ws
   websocketIds.push(userID)
   console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(webSockets))
   //
-
+} else {
+  console.log("Could not process User ID")
+}
 
   ws.on('message', message => {
 
