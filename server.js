@@ -22,9 +22,14 @@ const wss = new Server({
 
 class ConnectionManager {
 
-  init() {
+  constructor() {
+    console.log("initializing class variables")
     this.websocketIds = []
     this.websockets = {}
+  }
+  init() {
+
+    console.log(this.websockets)
     wss.on('connection', function connection(ws, req) {
       var userID = req.url.split("/")[1]
       console.log("Incoming url is " + req.url)
@@ -32,6 +37,7 @@ class ConnectionManager {
       console.log('Client connected');
       console.log("User ID : " + userID)
       if (userID != null) {
+        console.log(this.websockets)
         this.websockets[userID] = ws
         this.websocketIds.push(userID)
         console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(this.websockets))
@@ -76,7 +82,7 @@ class ConnectionManager {
 
 
       });
-    });
+    }.bind(this));
   }
 }
 
