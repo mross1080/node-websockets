@@ -37,7 +37,7 @@ class ConnectionManager {
       console.log('Client connected');
       console.log("User ID : " + userID)
       if (userID != null) {
-        
+
         this.websockets[userID] = ws
         this.websocketIds.push(userID)
         console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(this.websockets))
@@ -46,7 +46,7 @@ class ConnectionManager {
         console.log("Could not process User ID")
       }
 
-      ws.on('message', message => {
+      ws.on('message', function(message) {
 
         try {
           console.log(`Received message => ${message}`)
@@ -62,7 +62,7 @@ class ConnectionManager {
               console.log("Sending to id " + clientId)
               this.websockets[clientId].send(message)
             }
-          })
+          }.bind(this))
           // if (toUserWebSocket) {
           //   console.log('sent to ' + messageArray[0] + ': ' + JSON.stringify(messageArray))
           //   messageArray[0] = userID
@@ -73,15 +73,15 @@ class ConnectionManager {
           console.log(e)
 
         }
-      })
-      ws.on('close', () => {
+      }.bind(this))
+      ws.on('close', function() {
 
         console.log('Client disconnected : ' + userID)
         this.websocketIds = this.websocketIds.filter(e => e !== userID); // will return ['A', 'C']
         console.log("Remaining Clients are : " + this.websocketIds)
 
 
-      });
+      }.bind(this));
     }.bind(this));
   }
 }
