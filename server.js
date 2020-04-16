@@ -20,73 +20,67 @@ const wss = new Server({
 });
 
 
+class ConnectionManager {
 
-let websocketIds = []
-wss.on('connection', function connection(ws, req) {
-  var userID = req.url.split("/")[1]
-  console.log("Incoming url is " + req.url)
-  // console.log(ws)
-  console.log('Client connected');
-  console.log("User ID : " + userID)
-  if (userID != null) {
-  webSockets[userID] = ws
-  websocketIds.push(userID)
-  console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(webSockets))
-  //
-} else {
-  console.log("Could not process User ID")
-}
+  init() {
+    this.websocketIds = []
+    this.webSockets = {}
+    wss.on('connection', function connection(ws, req) {
+      var userID = req.url.split("/")[1]
+      console.log("Incoming url is " + req.url)
+      // console.log(ws)
+      console.log('Client connected');
+      console.log("User ID : " + userID)
+      if (userID != null) {
+        this.websockets[userID] = ws
+        this.websocketIds.push(userID)
+        console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(this.websockets))
+        //
+      } else {
+        console.log("Could not process User ID")
+      }
 
-  ws.on('message', message => {
+      ws.on('message', message => {
 
-    try {
-      console.log(`Received message => ${message}`)
-      console.log('received from ' + userID + ': ' + message)
+        try {
+          console.log(`Received message => ${message}`)
+          console.log('received from ' + userID + ': ' + message)
 
 
-      // var toUserWebSocket = webSockets[userID]
-      // console.log(toUserWebSocket)
+          // var toUserWebSocket = this.websockets[userID]
+          // console.log(toUserWebSocket)
 
-      websocketIds.forEach(function(clientId) {
-        console.log(clientId)
-        if (clientId != userID) {
-          console.log("Sending to id " + clientId)
-          webSockets[clientId].send(message)
+          this.websocketIds.forEach(function(clientId) {
+            console.log(clientId)
+            if (clientId != userID) {
+              console.log("Sending to id " + clientId)
+              this.websockets[clientId].send(message)
+            }
+          })
+          // if (toUserWebSocket) {
+          //   console.log('sent to ' + messageArray[0] + ': ' + JSON.stringify(messageArray))
+          //   messageArray[0] = userID
+          //   toUserWebSocket.send(JSON.stringify(messageArray))
+          // }
+        } catch (e) {
+
+          console.log(e)
+
         }
       })
-      // if (toUserWebSocket) {
-      //   console.log('sent to ' + messageArray[0] + ': ' + JSON.stringify(messageArray))
-      //   messageArray[0] = userID
-      //   toUserWebSocket.send(JSON.stringify(messageArray))
-      // }
-    } catch (e) {
+      ws.on('close', () => {
 
-      console.log(e)
+        console.log('Client disconnected : ' + userID)
+        this.websocketIds = this.websocketIds.filter(e => e !== userID); // will return ['A', 'C']
+        console.log("Remaining Clients are : " + this.websocketIds)
 
-    }
-  })
-  ws.on('close', () => {
 
-    console.log('Client disconnected : ' + userID)
-    websocketIds = websocketIds.filter(e => e !== userID); // will return ['A', 'C']
-    console.log("Remaining Clients are : " + websocketIds)
+      });
+    });
+  }
+}
 
 
 
-  });
-});
-
-// wss.on("message", (ws) => {
-//   console.log("got message!!")
-//   ws.clients.forEach((client) => {
-//     client.send(new Date().toTimeString());
-//   });
-//
-//
-// })
-
-// setInterval(() => {
-//   wss.clients.forEach((client) => {
-//     client.send(new Date().toTimeString());
-//   });
-// }, 1000);
+var connectionManager = new ConnectionManager()
+connectionManager.init()
