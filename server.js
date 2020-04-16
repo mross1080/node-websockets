@@ -69,7 +69,7 @@ wss.on('connection', function connection(ws, req) {
 
     console.log('Client disconnected : ' + userID)
     websocketIds = websocketIds.filter(e => e !== userID); // will return ['A', 'C']
-    console.log("Remaining Clients are : " + webSocketIds)
+    console.log("Remaining Clients are : " + websocketIds)
 
 
 
