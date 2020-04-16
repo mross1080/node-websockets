@@ -37,7 +37,7 @@ class ConnectionManager {
       console.log('Client connected');
       console.log("User ID : " + userID)
       if (userID != null) {
-        console.log(this.websockets)
+        
         this.websockets[userID] = ws
         this.websocketIds.push(userID)
         console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(this.websockets))
