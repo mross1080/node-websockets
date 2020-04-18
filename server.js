@@ -26,21 +26,32 @@ class ConnectionManager {
     console.log("initializing class variables")
     this.websocketIds = []
     this.websockets = {}
+    this.routeTable = {
+      "pause": {
+        "websocketIds": [],
+        "websockets": {}
+      },
+      "filterbubble": {
+        "websocketIds": [],
+        "websockets": {}
+      }
+    }
   }
   init() {
 
-    console.log(this.websockets)
+
     wss.on('connection', function connection(ws, req) {
       var userID = req.url.split("/")[1]
       console.log("Incoming url is " + req.url)
+      var route = req.url.split("/")[2]
       // console.log(ws)
       console.log('Client connected');
       console.log("User ID : " + userID)
       if (userID != null) {
 
-        this.websockets[userID] = ws
-        this.websocketIds.push(userID)
-        console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(this.websockets))
+        this.routeTable[route]["websockets"][userID] = ws
+        this.routeTable[route]["websocketIds"].push(userID)
+        console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(this.routeTable[route]["websockets"]))
         //
       } else {
         console.log("Could not process User ID")
@@ -53,14 +64,14 @@ class ConnectionManager {
           console.log('received from ' + userID + ': ' + message)
 
 
-          // var toUserWebSocket = this.websockets[userID]
+          // var toUserWebSocket = this.routeTable[route]["websockets"][userID]
           // console.log(toUserWebSocket)
 
-          this.websocketIds.forEach(function(clientId) {
+          this.routeTable[route]["websocketIds"].forEach(function(clientId) {
             console.log(clientId)
             if (clientId != userID) {
               console.log("Sending to id " + clientId)
-              this.websockets[clientId].send(message)
+              this.routeTable[route]["websockets"][clientId].send(message)
             }
           }.bind(this))
           // if (toUserWebSocket) {
@@ -77,8 +88,8 @@ class ConnectionManager {
       ws.on('close', function() {
 
         console.log('Client disconnected : ' + userID)
-        this.websocketIds = this.websocketIds.filter(e => e !== userID); // will return ['A', 'C']
-        console.log("Remaining Clients are : " + this.websocketIds)
+        this.routeTable[route]["websocketIds"] = this.routeTable[route]["websocketIds"].filter(e => e !== userID); // will return ['A', 'C']
+        console.log("Remaining Clients are : " + this.routeTable[route]["websocketIds"])
 
 
       }.bind(this));
