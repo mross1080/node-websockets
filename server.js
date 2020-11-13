@@ -1,5 +1,4 @@
 'use strict';
-//https://stackoverflow.com/questions/16280747/sending-message-to-a-specific-connected-users-using-websocket
 const express = require('express');
 const {
   Server
@@ -38,9 +37,15 @@ class ConnectionManager {
     }
 
 
+
+
+
   }
   init() {
 
+    this.interval = setInterval(function () {
+      this.broadcastMessages()
+    }.bind(this), 1000);
 
     wss.on('connection', function connection(ws, req) {
 
@@ -56,7 +61,22 @@ class ConnectionManager {
       console.log('Client connected');
       console.log("User ID : " + userID)
 
+      if(userID =="STOP") {
+        clearInterval(this.interval)
+        this.interval = setInterval(function () {
+          this.broadcastMessages()
+        }.bind(this), 300);
+      }
+
       if (userID != null) {
+
+        if (userID == "ADMIN") {
+          console.log("ADMINNNNN")
+          // console.log(`Received message => ${message}`)
+          console.log('received from ' + userID)
+
+
+        }
 
         this.routeTable["websockets"][userID] = ws
         this.routeTable["websocketIds"].push(userID)
@@ -77,6 +97,20 @@ class ConnectionManager {
         try {
           console.log(`Received message => ${message}`)
           console.log('received from ' + userID + ': ' + message)
+
+          if (userID == "ADMIN") {
+            console.log("ADMINNNNN")
+            console.log(`Received message => ${message}`)
+            // console.log('received from ' + userID)
+  
+              clearInterval(this.interval)
+              this.interval = setInterval(function () {
+                this.broadcastMessages()
+              }.bind(this), Number(message));
+  
+  
+          }
+  
 
 
           // console.log(toUserWebSocket)
@@ -144,7 +178,7 @@ class ConnectionManager {
 
 var connectionManager = new ConnectionManager()
 connectionManager.init()
-setInterval(function () {
-  connectionManager.broadcastMessages()
-}, 1000);
+// setInterval(function () {
+//   connectionManager.broadcastMessages()
+// }, 1000);
 

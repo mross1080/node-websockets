@@ -1,39 +1,63 @@
 <html>
-  <head>
-    <script>
-      let HOST = location.origin.replace(/^http/, 'ws')
-      let ws = new WebSocket(HOST + "/2");
-      let el;
 
-      ws.onopen = function (event) {
-  ws.send("Hello From the node server!!");
-};
+<head>
+  <script>
+    let HOST = location.origin.replace(/^http/, 'ws')
 
-      ws.onmessage = (event) => {
-        el = document.getElementById('server-time');
-        el.innerHTML = 'Server time: ' + event.data;
-      };
+    // let serverUrl = "wss://sixdegreesserver.herokuapp.com"
+    // let serverUrl = "ws://localhost:3000"
+    let serverUrl = HOST
+    console.log(serverUrl)
 
 
-    </script>
+    const phone_id = "ADMIN"
+    console.log(phone_id);
+    // shirt
+    let socketServer = new WebSocket(serverUrl + "/" + phone_id + "/pause");
+    let el;
+
+    socketServer.onopen = function (event) {
+      socketServer.send("Hello From the node server!!");
+    };
+
+    socketServer.onmessage = (event) => {
+      el = document.getElementById('server-time');
+      el.innerHTML = 'Server time: ' + event.data;
+    };
+
+    function transmitVal(val) {
+      socketServer.send(val);
+   
+      console.log("SEND VALUE" + val)
+    }
 
 
-          <link rel="stylesheet" href="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.css">
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  </head>
-  <body>
-    <span class="switch">
-  <input type="checkbox" id="switch-1">
-  <label for="switch-1">Switch 1</label>
-</span>
+  </script>
 
-<span class="switch">
-  <input type="checkbox" id="switch-2" checked>
-  <label for="switch-2">Switch 2</label>
-</span>
-    <h1>Web Socket Front End</h1>
-    <p id="server-time"></p>
-    <script src="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.js"></script>
 
-  </body>
+  <link rel="stylesheet" href="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+  <span class="switch">
+    <input type="checkbox" id="switch-1">
+    <label for="switch-1">Switch 1</label>
+  </span>
+
+  <span class="switch">
+    <input type="checkbox" id="switch-2" checked>
+    <label for="switch-2">Switch 2</label>
+  </span>
+  <h1>Web Socket Front End</h1>
+  <p id="server-time"></p>
+  <script src="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.js"></script>
+
+
+  <div class="slidecontainer">
+    <input oninput="transmitVal(this.value)" type="range" min="1" max="1000" value="750" class="slider" id="myRange">
+  </div>
+
+</body>
+
 </html>
