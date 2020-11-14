@@ -13,7 +13,7 @@
     const phone_id = "ADMIN"
     console.log(phone_id);
     // shirt
-    let socketServer = new WebSocket(serverUrl + "/" + phone_id + "/pause");
+    let socketServer = new WebSocket(serverUrl + "/" + phone_id + "/travel");
     let el;
 
     socketServer.onopen = function (event) {
@@ -31,33 +31,44 @@
       console.log("SEND VALUE" + val)
     }
 
+    function transmitWords(){
+      var words = $("#fname").val()
+
+      socketServer.send("WORDS|" + words);
+   
+   console.log("SEND VALUE" + words)
+    }
+
 
   </script>
 
 
-  <link rel="stylesheet" href="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.css">
+<!-- Compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+<!-- Compiled and minified JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+        
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 </head>
 
 <body>
-  <span class="switch">
-    <input type="checkbox" id="switch-1">
-    <label for="switch-1">Switch 1</label>
-  </span>
+  <div class="container">
 
-  <span class="switch">
-    <input type="checkbox" id="switch-2" checked>
-    <label for="switch-2">Switch 2</label>
-  </span>
   <h1>Web Socket Front End</h1>
   <p id="server-time"></p>
   <script src="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.js"></script>
 
 
+  <label for="fname">Text </label>
+  <input type="text" id="fname" name="fname"><br><br>
+  <a onclick="transmitWords()" class="waves-effect waves-light btn">Enter</a>
+
+
   <div class="slidecontainer">
     <input oninput="transmitVal(this.value)" type="range" min="1" max="1000" value="750" class="slider" id="myRange">
   </div>
-
+</div>
 </body>
 
 </html>

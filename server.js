@@ -29,7 +29,11 @@ class ConnectionManager {
     this.websockets = {}
     this.count = 0;
     this.current_index = 0;
+    this.current_word_index = 0;
+    this.display_sentence = ["Hello","From","The","Server"]
+    this.display_sentence_index = 0
     this.routeTable = {
+ 
 
       "websocketIds": [],
       "websockets": {}
@@ -43,85 +47,131 @@ class ConnectionManager {
   }
   init() {
 
-    this.interval = setInterval(function () {
-      this.broadcastMessages()
-    }.bind(this), 1000);
+    // this.interval = setInterval(function () {
+    //   this.broadcastMessages()
+    // }.bind(this), 1000);
 
     wss.on('connection', function connection(ws, req) {
 
 
-
-
-
-
       var userID = req.url.split("/")[1]
       console.log("Incoming url is " + req.url)
-      // var route = req.url.split("/")[2]
+      var route = req.url.split("/")[2]
+
+      console.log(route)
       // console.log(ws)
       console.log('Client connected');
       console.log("User ID : " + userID)
 
-      if(userID =="STOP") {
-        clearInterval(this.interval)
-        this.interval = setInterval(function () {
-          this.broadcastMessages()
-        }.bind(this), 300);
-      }
-
-      if (userID != null) {
-
-        if (userID == "ADMIN") {
-          console.log("ADMINNNNN")
-          // console.log(`Received message => ${message}`)
-          console.log('received from ' + userID)
 
 
-        }
+      if (userID != null && userID != "ADMIN")  {
+
+        // if (userID == "ADMIN") {
+        //   console.log("ADMINNNNN")
+        //   // console.log(`Received message => ${message}`)
+        //   console.log('received from ' + userID)
+
+        // }
 
         this.routeTable["websockets"][userID] = ws
         this.routeTable["websocketIds"].push(userID)
         console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(this.routeTable["websockets"]))
-        console.log("Web ids ",this.routeTable["websocketIds"])
-        //
+        console.log("Web ids ", this.routeTable["websocketIds"])
+
+
+        console.log("THis is my socket!")
+        console.log(this.routeTable["websockets"][userID])
+        this.routeTable["websockets"][userID].send("PING FROM SERVER") 
+        
+
+      console.log("Setting up route")
+
+      if (route == "sequential") {
+        console.log("Setting up sequential timer")
+        this.interval = setInterval(function () {
+          this.broadcastMessages()
+        }.bind(this), 1000);
+      }
+
+      if (route == "travel") {
+        console.log("Sending message to start")
+        console.log(this.display_sentence)
+        console.log(this.display_sentence_index)
+
+        this.sendNextWord(userID)
+      }
       } else {
         console.log("Could not process User ID")
       }
 
-      this.routeTable["websockets"][userID].send("HELLO FROM SERVER")
+
+      console.log("Sent")
+      
 
 
+
+     
 
 
       ws.on('message', function (message) {
 
         try {
-          console.log(`Received message => ${message}`)
+          // console.log(`Received message => ${message}`)
           console.log('received from ' + userID + ': ' + message)
 
           if (userID == "ADMIN") {
-            console.log("ADMINNNNN")
+            // console.log("ADMINNNNN")
             console.log(`Received message => ${message}`)
             // console.log('received from ' + userID)
-  
+
+            if (route == "travel") {
+              console.log("Got a request to update the scrolling words")
+              console.log(message.split("|")[0])
+              if (message.split("|")[0] == "WORDS") { 
+                var words = message.split("|")[1]
+                  console.log("Setting words to ", words)
+                  this.display_sentence = words.split(" ")
+                  this.display_sentence_index = 0
+
+              }
+
+            }
+            else if (route=="sequential"){
+
+
               clearInterval(this.interval)
               this.interval = setInterval(function () {
                 this.broadcastMessages()
               }.bind(this), Number(message));
-  
-  
-          }
-  
-
-
-          // console.log(toUserWebSocket)
-
-          this.routeTable["websocketIds"].forEach(function (clientId) {
-            console.log(clientId)
-            if (clientId != userID) {
-              console.log("Sending to id " + clientId)
-              this.routeTable["websockets"][clientId].send(message)
             }
-          }.bind(this))
+
+          } else {
+
+
+          if (route == "travel") {
+            if (message.split("|")[1] == "DONE") {
+              console.log("Completed Animation for Connection ID : ", userID)
+              console.log("Current Index when done", this.current_word_index)
+
+
+              this.current_word_index++;
+              if (this.current_word_index == this.routeTable["websocketIds"].length) {
+                console.log("Resetting to 0")
+                this.current_word_index = 0;
+              }
+              console.log("All IDS", this.routeTable["websocketIds"])
+              console.log("Current Index id i will select from", this.current_word_index)
+
+              var current_id = this.routeTable["websocketIds"][this.current_word_index]
+              console.log("Triggering Web Socket with ID : ", current_id)
+              this.sendNextWord(current_id)
+              // this.routeTable["websockets"][current_id].send("Start")
+
+            }
+          }
+        }
+
 
         } catch (e) {
 
@@ -140,31 +190,42 @@ class ConnectionManager {
     }.bind(this));
   }
 
+   sendNextWord (userID) {
+    if (this.display_sentence.length > 0) {
+      console.log("Telling socket to start", "Start|"+ this.display_sentence[this.display_sentence_index])
+    this.routeTable["websockets"][userID].send("Start|"+ this.display_sentence[this.display_sentence_index])
+
+    console.log("Sent word",this.display_sentence[this.display_sentence_index])
+    this.display_sentence_index++
+
+    if (this.display_sentence_index >= this.display_sentence.length) {
+      console.log("Resetting to 0")
+      this.display_sentence_index = 0;
+    }
+
+
+  }
+}
+
+
   broadcastMessages() {
     // console.log(this.routeTable)
 
-    if (this.routeTable["websocketIds"].length > 0 ) {
+    if (this.routeTable["websocketIds"].length > 0) {
       console.log("current index", this.current_index)
-    var current_id = this.routeTable["websocketIds"][this.current_index]
-    console.log("current id ", current_id)
-    console.log("web socket ids",this.routeTable["websocketIds"])
-    this.routeTable["websockets"][current_id].send(this.count)
-    this.count++;
-    this.current_index++;
+      var current_id = this.routeTable["websocketIds"][this.current_index]
+      console.log("current id ", current_id)
+      console.log("web socket ids", this.routeTable["websocketIds"])
+      this.routeTable["websockets"][current_id].send(this.count)
+      this.count++;
+      this.current_index++;
 
-    if (this.current_index > this.routeTable["websocketIds"].length -1) {
-      this.current_index = 0;
+      if (this.current_index > this.routeTable["websocketIds"].length - 1) {
+        this.current_index = 0;
+      }
+
+
     }
-
-    
-    // this.routeTable["websocketIds"].forEach(function (clientId) {
-    //   console.log(clientId)
-
-    //   this.routeTable["websockets"][clientId].send(this.count)
-    //   this.count++;
-
-    // }.bind(this))
-  }
   } catch(e) {
 
     console.log(e)
