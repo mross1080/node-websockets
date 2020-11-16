@@ -5,6 +5,7 @@ const {
 } = require('ws');
 console.log("Starting Server")
 const url = require('url');
+var { Timer } = require('./public/easytimer.min.js');
 
 const PORT = process.env.PORT || 3000;
 const INDEX = '/index.html';
@@ -21,6 +22,11 @@ const wss = new Server({
 });
 
 
+var timer = new Timer();
+// timer.start({countdown: true, startValues: {seconds: 2}});
+// timer.addEventListener('targetAchieved', function (e) {
+//   console.log("Done with this shit")
+// });
 class ConnectionManager {
 
   constructor() {
@@ -32,27 +38,37 @@ class ConnectionManager {
     this.current_word_index = 0;
     this.display_sentence = ["Hello","From","The","Server"]
     this.display_sentence_index = 0
-    this.routeTable = {
- 
+    this.photoTimeout = 3000
+    this.ordered_websockets = []
+    this.animationInProgress = false;
+    this.sequential_interval = 1000
+    this.timer = new Timer()
+    this.sequence_active = false
+    this.broadcastTimer = new Timer()
+    // this.broadcastTimer.addEventListener('targetAchieved', this.restartAnimation());
 
+    this.timer.addEventListener('targetAchieved', function (e) {
+      console.log("Restarting animation")
+      // this.animationInProgress = true;
+      for (var ws_connection of this.ordered_websockets) {
+        ws_connection.send("RESET")
+      }
+      // this.broadcastTimer.start({countdown: true, startValues: {seconds: 1}});
+      setTimeout(function(){this.animationInProgress = true}.bind(this), 1000)
+    }.bind(this));
+
+    this.routeTable = {
       "websocketIds": [],
       "websockets": {}
-
     }
+  }
 
-
-
-
-
+  restartAnimation() {
+    console.log("Im a proof of concept!")
+    this.animationInProgress = true
   }
   init() {
-
-    // this.interval = setInterval(function () {
-    //   this.broadcastMessages()
-    // }.bind(this), 1000);
-
     wss.on('connection', function connection(ws, req) {
-
 
       var userID = req.url.split("/")[1]
       console.log("Incoming url is " + req.url)
@@ -62,37 +78,28 @@ class ConnectionManager {
       // console.log(ws)
       console.log('Client connected');
       console.log("User ID : " + userID)
-
-
+      this.broadcastTimer.start({countdown: true, startValues: {seconds: 3}});
 
       if (userID != null && userID != "ADMIN")  {
-
-        // if (userID == "ADMIN") {
-        //   console.log("ADMINNNNN")
-        //   // console.log(`Received message => ${message}`)
-        //   console.log('received from ' + userID)
-
-        // }
-
         this.routeTable["websockets"][userID] = ws
         this.routeTable["websocketIds"].push(userID)
-        console.log('connected: ' + userID + ' in ' + Object.getOwnPropertyNames(this.routeTable["websockets"]))
         console.log("Web ids ", this.routeTable["websocketIds"])
-
-
-        console.log("THis is my socket!")
-        console.log(this.routeTable["websockets"][userID])
-        this.routeTable["websockets"][userID].send("PING FROM SERVER") 
-        
+        this.routeTable["websockets"][userID].send("PING FROM SERVER")         
 
       console.log("Setting up route")
 
       if (route == "sequential") {
+        var id_to_index = Number(userID);
+        this.ordered_websockets[id_to_index] = ws
+
         console.log("Setting up sequential timer")
+        this.animationInProgress = true;
+        if (!this.sequence_active) {
+          this.sequence_active = true;
         this.interval = setInterval(function () {
           this.broadcastMessages()
-        }.bind(this), 1000);
-      }
+        }.bind(this), this.sequential_interval);
+      }}
 
       if (route == "travel") {
         console.log("Sending message to start")
@@ -101,6 +108,9 @@ class ConnectionManager {
 
         this.sendNextWord(userID)
       }
+
+
+
       } else {
         console.log("Could not process User ID")
       }
@@ -108,12 +118,6 @@ class ConnectionManager {
 
       console.log("Sent")
       
-
-
-
-     
-
-
       ws.on('message', function (message) {
 
         try {
@@ -138,7 +142,9 @@ class ConnectionManager {
 
             }
             else if (route=="sequential"){
-
+              var msg_split = message.split("|")
+              if (msg_split[1] == "msgInterval") {
+      
 
               clearInterval(this.interval)
               this.interval = setInterval(function () {
@@ -146,6 +152,10 @@ class ConnectionManager {
               }.bind(this), Number(message));
             }
 
+            if(msg_split[1] == "photoInterval"){
+              this.photoTimeout = Number(message)
+            }
+          }
           } else {
 
 
@@ -212,16 +222,41 @@ class ConnectionManager {
     // console.log(this.routeTable)
 
     if (this.routeTable["websocketIds"].length > 0) {
-      console.log("current index", this.current_index)
-      var current_id = this.routeTable["websocketIds"][this.current_index]
-      console.log("current id ", current_id)
-      console.log("web socket ids", this.routeTable["websocketIds"])
-      this.routeTable["websockets"][current_id].send(this.count)
-      this.count++;
-      this.current_index++;
+      
 
-      if (this.current_index > this.routeTable["websocketIds"].length - 1) {
+
+
+      
+      if (this.current_index > this.ordered_websockets.length - 1 && this.animationInProgress == true) {
+        this.animationInProgress = false;
+        console.log("Aniamtion done setting restart")
         this.current_index = 0;
+        this.count = 0;
+        this.timer.start({countdown: true, startValues: {seconds: 5}});
+        // setTimeout(function(){
+        //   console.log("Restarting animation")
+        //   // this.animationInProgress = true;
+        //   for (var ws_connection of this.ordered_websockets) {
+        //     ws_connection.send("RESET")
+        //   }
+
+        //   setTimeout(function(){this.animationInProgress = true}.bind(this), 2000)
+ 
+        // }.bind(this),5000)
+        
+      } else{
+
+        if(this.animationInProgress) {
+        console.log("Running animation for index ", this.current_index)
+        var current_id = this.routeTable["websocketIds"][this.current_index]
+        console.log("current id ", current_id)
+        console.log("web socket ids", this.routeTable["websocketIds"])
+        this.ordered_websockets[this.current_index].send(this.count + "|" + this.photoTimeout + "|" + this.current_index)
+        // this.routeTable["websockets"][current_id].send(this.count + "|" + this.photoTimeout)
+        this.count++;
+        this.current_index++;
+      }
+
       }
 
 

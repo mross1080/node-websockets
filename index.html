@@ -13,7 +13,7 @@
     const phone_id = "ADMIN"
     console.log(phone_id);
     // shirt
-    let socketServer = new WebSocket(serverUrl + "/" + phone_id + "/travel");
+    let socketServer = new WebSocket(serverUrl + "/" + phone_id + "/seqeuntial");
     let el;
 
     socketServer.onopen = function (event) {
@@ -25,10 +25,12 @@
       el.innerHTML = 'Server time: ' + event.data;
     };
 
-    function transmitVal(val) {
-      socketServer.send(val);
-   
-      console.log("SEND VALUE" + val)
+    function transmitVal(val, msgType) {
+      socketServer.send(`${val}|${msgType}`);
+
+      console.log(`${val}|${msgType}`)
+      // console.log("MSG TYPE", msgType)
+      // console.log("SEND VALUE" + val)
     }
 
     function transmitWords(){
@@ -57,17 +59,26 @@
 
   <h1>Web Socket Front End</h1>
   <p id="server-time"></p>
-  <script src="https://cdn.shoelace.style/1.0.0-beta.25/shoelace.js"></script>
 
 
   <label for="fname">Text </label>
   <input type="text" id="fname" name="fname"><br><br>
   <a onclick="transmitWords()" class="waves-effect waves-light btn">Enter</a>
-
-
-  <div class="slidecontainer">
-    <input oninput="transmitVal(this.value)" type="range" min="1" max="1000" value="750" class="slider" id="myRange">
+<br><br><br><br>
+<div class="row">
+  <div class="col s6">
+    <label for="1">Message Send Interval</label>
+    <input name="1" oninput="transmitVal(this.value,'msgInterval')" type="range" min="1" max="2000" value="750" class="">
   </div>
+
+  <div class="col s6">
+    <label for="2">Photo Change Interval</label>
+    <input  name="2" oninput="transmitVal(this.value,'photoInterval')" type="range" min="1" max="2000" value="750" class="" >
+  </div>
+
+</div>
+  
+
 </div>
 </body>
 
