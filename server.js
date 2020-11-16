@@ -232,17 +232,9 @@ class ConnectionManager {
         console.log("Aniamtion done setting restart")
         this.current_index = 0;
         this.count = 0;
+        //You've reached the end of the animation, start the timer that will black out all the screens and then reset the animation
         this.timer.start({countdown: true, startValues: {seconds: 5}});
-        // setTimeout(function(){
-        //   console.log("Restarting animation")
-        //   // this.animationInProgress = true;
-        //   for (var ws_connection of this.ordered_websockets) {
-        //     ws_connection.send("RESET")
-        //   }
 
-        //   setTimeout(function(){this.animationInProgress = true}.bind(this), 2000)
- 
-        // }.bind(this),5000)
         
       } else{
 
