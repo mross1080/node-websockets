@@ -30,15 +30,12 @@ class ConnectionManager {
     console.log("initializing class variables")
     this.websocketIds = []
     this.websockets = {}
-    this.count = 0;
-    this.current_index = 0;
     this.current_client_index = 0;
     this.display_sentence = ["Hello", "From", "The"]
     this.display_sentence_index = 0
     this.photoTimeout = 3000
     this.ordered_websockets = []
-    this.animationInProgress = false;
-    this.sequential_interval = 1000
+    this.sequential_interval = 2000
     this.timer = new Timer()
     this.sequence_active = false
     this.broadcastTimer = new Timer()
@@ -46,6 +43,7 @@ class ConnectionManager {
     this.current_animation = 0;
     this.word_animation_started = false;
     this.route = ""
+    this.animationInProgress = false;
 
 
 
@@ -56,19 +54,21 @@ class ConnectionManager {
         ws_connection.send("RESET")
       }
       // this.broadcastTimer.start({countdown: true, startValues: {seconds: 1}});
-      setTimeout(function () { 
-         
+      setTimeout(function () {
+
         if (this.route == "sequential") {
+          console.log("Animation should now be in progress")
           this.animationInProgress = true
+          this.startSequentialMessageAnimation(this.routeTable["websocketIds"][0], this.ordered_websockets[0])
         }
-        
-        if(this.route == "combined") {
+
+        if (this.route == "combined") {
           this.sendNextWord(this.routeTable["websocketIds"][0])
         }
-        
-      
-      
-      
+
+
+
+
       }.bind(this), 1000)
     }.bind(this));
 
@@ -84,18 +84,14 @@ class ConnectionManager {
   }
 
 
-  resetValues() {
-    this.current_animation = 0;
-    this.word_animation_started = false;
-    this.count = 0;
-    this.current_index = 0;
-    this.current_client_index = 0;
-    this.display_sentence_index = 0
-    this.photoTimeout = 3000
-    this.animationInProgress = false;
-    this.sequential_interval = 1000
-    this.sequence_active = false
-  }
+  // resetValues() {
+  //   this.current_animation = 0;
+  //   this.word_animation_started = false;
+  //   this.current_client_index = 0;
+  //   this.display_sentence_index = 0
+  //   this.photoTimeout = 3000
+  //   this.sequential_interval = 1000
+  // }
 
   init() {
     wss.on('connection', function connection(ws, req) {
@@ -111,29 +107,33 @@ class ConnectionManager {
       console.log("User ID : " + userID)
       this.broadcastTimer.start({ countdown: true, startValues: { seconds: 3 } });
 
+      var id_to_index = Number(userID);
+      this.ordered_websockets[id_to_index] = ws;
+
 
       //The Main Route for Incoming Clients to recieve register and start loops
       if (userID != null && userID != "ADMIN") {
-        this.resetValues()
         this.routeTable["websockets"][userID] = ws
         this.routeTable["websocketIds"].push(userID)
         console.log("Web ids ", this.routeTable["websocketIds"])
-        
-        if (route == "sequential" || (route == "combined")) {
-          this.processIncomingSequentialMessage(userID, ws);
+
+        if ((route == "sequential" || (route == "combined")) && this.animationInProgress == false) {
+          // Start Messaging
+          this.startSequentialMessageAnimation(userID, ws);
         }
 
         if (route == "travel" && !this.word_animation_started) {
-          
-          // Start First Animation
-          setTimeout(function(){
+
+          // Start First Animation 
+          // Using a timeout just to give the socket extra time to establish connection
+          setTimeout(function () {
             this.sendNextWord(userID)
-          }.bind(this),1000)
-         
+          }.bind(this), 1000)
+
           this.word_animation_started = true;
         }
 
-     
+
 
       } else {
         console.log("Could not process User ID")
@@ -178,7 +178,7 @@ class ConnectionManager {
             }
           } else {
 
-            if (route == "travel" || route =="combined") {
+            if (route == "travel" || route == "combined") {
               if (message.split("|")[1] == "DONE") {
                 this.processIncomingWordTravelMessage(userID)
 
@@ -196,29 +196,66 @@ class ConnectionManager {
       ws.on('close', function () {
 
         console.log('Client disconnected : ' + userID)
-        this.routeTable["websocketIds"] = this.routeTable["websocketIds"].filter(e => e !== userID); 
+        this.routeTable["websocketIds"] = this.routeTable["websocketIds"].filter(e => e !== userID);
         console.log("Remaining Clients are : " + this.routeTable["websocketIds"])
 
       }.bind(this));
     }.bind(this));
   }
 
-  processIncomingSequentialMessage(userID, ws) {
-    var id_to_index = Number(userID);
-    this.ordered_websockets[id_to_index] = ws;
+  startSequentialMessageAnimation(userID, ws) {
+    console.log("In start sequential ")
+   
 
     this.animationInProgress = true;
-    if (!this.sequence_active) {
-      this.sequence_active = true;
-      this.interval = setInterval(function () {
-        this.broadcastMessages();
-      }.bind(this), this.sequential_interval);
-    }
+    
+
+
+      console.log("going into async loop Iterating over ", this.routeTable["websocketIds"]);
+      console.log(this.ordered_websockets.length);
+    (async function loop() {
+
+      try {
+        for (let i = 0; i < (this.ordered_websockets.length); i++) {
+          console.log("At index of promise ", i)
+          await new Promise(resolve => setTimeout(resolve, this.sequential_interval));
+          this.broadcastMessageToClient(i);
+
+        }
+
+        await  new Promise(resolve => setTimeout(resolve, 5000));
+        // Send a Signal to Reset to All Clients 
+        for (var ws_connection of this.ordered_websockets) {
+          ws_connection.send("RESET")
+        }
+        await  new Promise(resolve => setTimeout(resolve, 4000));
+        if (this.route == "sequential") {
+          console.log("Animation should now be in progress")
+          this.startSequentialMessageAnimation(this.routeTable["websocketIds"][0], this.ordered_websockets[0])
+        }
+
+        if (this.route == "combined") {
+          this.sendNextWord(this.routeTable["websocketIds"][0])
+        }
+
+        console.log("here is another thing")
+      } catch (err) {
+        console.log(err)
+      } finally {
+        console.log("DONE WITH ASYNC FUNCTION YALL")
+        // this.animationInProgress = false;
+
+
+        //You've reached the end of the animation, start the timer that will black out all the screens and then reset the animation
+        // this.timer.start({ countdown: true, startValues: { seconds: 5 } });
+      }
+    }.bind(this))();
+
   }
 
   processIncomingWordTravelMessage(userID) {
 
-   
+
     console.log("Completed Animation for Connection ID : ", userID)
     console.log("Current Index of client when done", this.current_client_index)
 
@@ -229,7 +266,7 @@ class ConnectionManager {
       this.current_client_index = 0;
       // this.sequence_active = false;
       // return;
-      
+
     }
     console.log("All IDS", this.routeTable["websocketIds"])
     console.log("Current Index id i will select from", this.current_client_index)
@@ -243,15 +280,15 @@ class ConnectionManager {
       if (this.route == "combined") {
         console.log("reached the end of the sequence for this route so starting next one ")
         this.sequence_active = false;
-        this.processIncomingSequentialMessage(this.userID, this.ordered_websockets[0]);
+        this.startSequentialMessageAnimation(this.userID, this.ordered_websockets[0]);
 
         return;
       }
 
-    } 
+    }
 
     this.sendNextWord(current_id)
-    
+
 
   }
   sendNextWord(userID) {
@@ -271,42 +308,10 @@ class ConnectionManager {
     }
   }
 
+  broadcastMessageToClient(current_index) {
 
-  broadcastMessages() {
-    
-
-    if (this.routeTable["websocketIds"].length > 0) {
-
-      // You've gone through all your clients so start the reset process
-      if (this.current_index > this.ordered_websockets.length - 1 && this.animationInProgress == true) {
-        this.animationInProgress = false;
-        console.log("Aniamtion done setting restart")
-        this.current_index = 0;
-        this.count = 0;
-        //You've reached the end of the animation, start the timer that will black out all the screens and then reset the animation
-        this.timer.start({ countdown: true, startValues: { seconds: 5 } });
-
-
-      } else {
-        // Main Animation Loop, tell the next client to take their action one at a time asynchronously 
-        if (this.animationInProgress) {
-          console.log("Running animation for index ", this.current_index)
-          var current_id = this.routeTable["websocketIds"][this.current_index]
-          console.log("current id ", current_id)
-          console.log("web socket ids", this.routeTable["websocketIds"])
-          this.ordered_websockets[this.current_index].send("IMGS" + "|" + this.count + "|" + this.photoTimeout + "|" + this.current_index)
-          // this.routeTable["websockets"][current_id].send(this.count + "|" + this.photoTimeout)
-          this.count++;
-          this.current_index++;
-        }
-
-      }
-
-
-    }
-  } catch(e) {
-
-    console.log(e)
+    console.log("current id of seq animation ", this.routeTable["websocketIds"][current_index])
+    this.ordered_websockets[current_index].send("IMGS" + "|" + current_index + "|" + this.photoTimeout + "|" + current_index)
 
   }
 
@@ -317,3 +322,24 @@ class ConnectionManager {
 
 var connectionManager = new ConnectionManager()
 connectionManager.init()
+// let myFirstPromise = new Promise((resolve, reject) => {
+//   // We call resolve(...) when what we were doing asynchronously was successful, and reject(...) when it failed.
+//   // In this example, we use setTimeout(...) to simulate async code. 
+//   // In reality, you will probably be using something like XHR or an HTML5 API.
+//   setTimeout( function() {
+//     resolve("Success!")  // Yay! Everything went well!
+//   }, 250) 
+// }) 
+
+// myFirstPromise.then((successMessage) => {
+//   // successMessage is whatever we passed in the resolve(...) function above.
+//   // It doesn't have to be a string, but if it is only a succeed message, it probably will be.
+//   console.log("Yay! " + successMessage) 
+// });
+
+// (async function loop() {
+//   for (let i = 0; i < 10; i++) {
+//       await new Promise(resolve => setTimeout(resolve, 500));
+//       console.log(i);
+//   }
+// })();
