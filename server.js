@@ -31,7 +31,7 @@ class ConnectionManager {
     this.websocketIds = []
     this.websockets = {}
     this.current_client_index = 0;
-    this.display_sentence = ["Hello", "From", "The"]
+    this.display_sentence = ["These", "Are", "My","Twisted","Words","!!!!!!!!!!"]
     this.display_sentence_index = 0
     this.photoTimeout = 3000
     this.ordered_websockets = []
@@ -44,38 +44,30 @@ class ConnectionManager {
     this.word_animation_started = false;
     this.route = ""
     this.animationInProgress = false;
-
-
-
-    this.timer.addEventListener('targetAchieved', function (e) {
-      console.log("Restarting animation")
-      // this.animationInProgress = true;
-      for (var ws_connection of this.ordered_websockets) {
-        ws_connection.send("RESET")
-      }
-      // this.broadcastTimer.start({countdown: true, startValues: {seconds: 1}});
-      setTimeout(function () {
-
-        if (this.route == "sequential") {
-          console.log("Animation should now be in progress")
-          this.animationInProgress = true
-          this.startSequentialMessageAnimation(this.routeTable["websocketIds"][0], this.ordered_websockets[0])
-        }
-
-        if (this.route == "combined") {
-          this.sendNextWord(this.routeTable["websocketIds"][0])
-        }
-
-
-
-
-      }.bind(this), 1000)
-    }.bind(this));
+    
 
     this.routeTable = {
       "websocketIds": [],
       "websockets": {}
     }
+    // [
+    //   "sleepyjoe","trump","makeamericagreatagain","trump2020","constitution","womeninpolitics","creatinghapppy" 
+
+    // ], 
+
+    this.graphDestinations = [
+      
+
+
+
+    ["mordorfitness","gymgoals","gym","clean","focus","None","stopthesteal"],
+    ["carlruns","betteryourmile","washingtondc","billgatescoronavirus","millionmagamarch","stopthesteal"]
+
+  
+  ]
+
+
+
   }
 
   restartAnimation() {
@@ -84,15 +76,7 @@ class ConnectionManager {
   }
 
 
-  // resetValues() {
-  //   this.current_animation = 0;
-  //   this.word_animation_started = false;
-  //   this.current_client_index = 0;
-  //   this.display_sentence_index = 0
-  //   this.photoTimeout = 3000
-  //   this.sequential_interval = 1000
-  // }
-
+  
   init() {
     wss.on('connection', function connection(ws, req) {
 
@@ -110,7 +94,6 @@ class ConnectionManager {
       var id_to_index = Number(userID);
       this.ordered_websockets[id_to_index] = ws;
 
-
       //The Main Route for Incoming Clients to recieve register and start loops
       if (userID != null && userID != "ADMIN") {
         this.routeTable["websockets"][userID] = ws
@@ -121,6 +104,12 @@ class ConnectionManager {
           // Start Messaging
           this.startSequentialMessageAnimation(userID, ws);
         }
+
+       
+        setTimeout(function () {
+          this.sendSetupMessage(ws,this.ordered_websockets.length - 1)
+        }.bind(this), 1000)
+
 
         if (route == "travel" && !this.word_animation_started) {
 
@@ -193,6 +182,7 @@ class ConnectionManager {
 
         }
       }.bind(this))
+
       ws.on('close', function () {
 
         console.log('Client disconnected : ' + userID)
@@ -203,82 +193,81 @@ class ConnectionManager {
     }.bind(this));
   }
 
+  sendSetupMessage(ws, word_index) {
+    ws.send("SETUP" + "|" + this.graphDestinations[this.current_animation][this.graphDestinations[this.current_animation].length-1] + "|" +  this.graphDestinations[this.current_animation][word_index])
+
+  }
+
+
   startSequentialMessageAnimation(userID, ws) {
-    console.log("In start sequential ")
-   
+    // console.log("In start sequential ")
+
 
     this.animationInProgress = true;
-    
 
 
-      console.log("going into async loop Iterating over ", this.routeTable["websocketIds"]);
-      console.log(this.ordered_websockets.length);
+
+    // console.log("going into async loop Iterating over ", this.routeTable["websocketIds"]);
+    console.log(this.ordered_websockets.length);
     (async function loop() {
 
-      try {
-        for (let i = 0; i < (this.ordered_websockets.length); i++) {
-          console.log("At index of promise ", i)
-          await new Promise(resolve => setTimeout(resolve, this.sequential_interval));
-          this.broadcastMessageToClient(i);
+      for (let i = 0; i < (this.ordered_websockets.length); i++) {
+        // console.log("At index of promise ", i)
+        await new Promise(resolve => setTimeout(resolve, this.sequential_interval));
+        this.broadcastMessageToClient(i);
 
-        }
-
-        await  new Promise(resolve => setTimeout(resolve, 5000));
-        // Send a Signal to Reset to All Clients 
-        for (var ws_connection of this.ordered_websockets) {
-          ws_connection.send("RESET")
-        }
-        await  new Promise(resolve => setTimeout(resolve, 4000));
-        if (this.route == "sequential") {
-          console.log("Animation should now be in progress")
-          this.startSequentialMessageAnimation(this.routeTable["websocketIds"][0], this.ordered_websockets[0])
-        }
-
-        if (this.route == "combined") {
-          this.sendNextWord(this.routeTable["websocketIds"][0])
-        }
-
-        console.log("here is another thing")
-      } catch (err) {
-        console.log(err)
-      } finally {
-        console.log("DONE WITH ASYNC FUNCTION YALL")
-        // this.animationInProgress = false;
-
-
-        //You've reached the end of the animation, start the timer that will black out all the screens and then reset the animation
-        // this.timer.start({ countdown: true, startValues: { seconds: 5 } });
       }
+
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Send a Signal to Reset to All Clients 
+      // console.log(this.ordered_websockets)
+      for (var ws_index in this.ordered_websockets) {
+        // console.log(this.ordered_websockets[ws_index])
+        this.ordered_websockets[ws_index].send("RESET")
+        console.log("Reset sending setup")
+        this.sendSetupMessage(this.ordered_websockets[ws_index],ws_index )
+      }
+      this.current_animation++;
+      if (this.current_animation == this.graphDestinations.length) {
+          this.current_animation = 0;
+      }
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      if (this.route == "sequential") {
+        // console.log("Animation should now be in progress")
+        this.startSequentialMessageAnimation(this.routeTable["websocketIds"][0], this.ordered_websockets[0])
+      }
+
+      if (this.route == "combined") {
+        console.log("\n\n Finished First Cycle Of Sequential, starting word cycle by sending animation to first client",this.routeTable["websocketIds"][0])
+        this.sendNextWord(this.routeTable["websocketIds"][0])
+      }
+
+
     }.bind(this))();
 
   }
 
   processIncomingWordTravelMessage(userID) {
 
-
     console.log("Completed Animation for Connection ID : ", userID)
-    console.log("Current Index of client when done", this.current_client_index)
+    console.log("Current Index of client that just finished done", this.current_client_index)
 
-
-    this.current_client_index++;
-    if (this.current_client_index == this.routeTable["websocketIds"].length) {
-      console.log("Resetting to 0")
-      this.current_client_index = 0;
-      // this.sequence_active = false;
-      // return;
-
-    }
-    console.log("All IDS", this.routeTable["websocketIds"])
-    console.log("Current Index id i will select from", this.current_client_index)
-    console.log(`\ndisplay sentence index : ${this.display_sentence_index}\n`)
+    //If we get a message like this it means we recieved a done signal, and we want to trigger the next animation
+    
+    console.log(`Comparing ${this.current_client_index} to this many websockets   ${this.routeTable["websocketIds"].length}`)
+    // if (this.current_client_index == this.routeTable["websocketIds"].length) {
+    //   console.log("Resetting to 0")
+    //   this.current_client_index = 0;
+    // }
 
     var current_id = this.routeTable["websocketIds"][this.current_client_index]
-    console.log("Triggering Web Socket with ID : ", current_id)
+    
     if (this.display_sentence_index >= this.display_sentence.length) {
-      console.log("Resetting to 0")
+      console.log("We've reached the end of the word phrase so Resetting to 0")
       this.display_sentence_index = 0;
+      this.current_client_index = 0;
       if (this.route == "combined") {
-        console.log("reached the end of the sequence for this route so starting next one ")
+        console.log("reached the end of the sentence so starting Sequential ")
         this.sequence_active = false;
         this.startSequentialMessageAnimation(this.userID, this.ordered_websockets[0]);
 
@@ -287,31 +276,34 @@ class ConnectionManager {
 
     }
 
+    console.log(`telling ${current_id} to run word animation`)
     this.sendNextWord(current_id)
 
 
   }
   sendNextWord(userID) {
     if (this.display_sentence.length > 0) {
-      console.log("Telling socket to start", "WORDS|Start|" + this.display_sentence[this.display_sentence_index])
-      this.routeTable["websockets"][userID].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index])
-
-      console.log("Sent word", this.display_sentence[this.display_sentence_index])
+      console.log("Telling socket to start", "WORDS|Start|" + this.display_sentence[this.display_sentence_index] + " of current index :" + this.current_client_index)
+     
+      
+      this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index])
       this.display_sentence_index++
-
-      // if (this.display_sentence_index >= this.display_sentence.length) {
-      //   console.log("Resetting to 0")
-      //   this.display_sentence_index = 0;
-      // }
-
+      this.current_client_index++;
+      if (this.current_client_index == this.routeTable["websocketIds"].length) {
+        console.log("Resetting to 0")
+        this.current_client_index = 0;
+      }
 
     }
   }
 
   broadcastMessageToClient(current_index) {
 
-    console.log("current id of seq animation ", this.routeTable["websocketIds"][current_index])
-    this.ordered_websockets[current_index].send("IMGS" + "|" + current_index + "|" + this.photoTimeout + "|" + current_index)
+    // console.log("current id of seq animation ", this.routeTable["websocketIds"][current_index])
+    // this.ordered_websockets[current_index].send("IMGS" + "|" + current_index + "|" + this.photoTimeout + "|" + current_index)
+    this.ordered_websockets[current_index].send("IMGS" + "|" + current_index + "|" + this.photoTimeout + "|" + this.graphDestinations[this.current_animation][current_index])
+
+
 
   }
 
