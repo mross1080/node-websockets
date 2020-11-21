@@ -58,10 +58,8 @@ class ConnectionManager {
     this.graphDestinations = [
       
 
-
-
-    ["forgive","believe","maga","magamillionmarch","millionmagamarch","stopthesteal"],
-    ["carlruns","betteryourmile","washingtondc","billgatescoronavirus","millionmagamarch","stopthesteal"]
+    ["ocelot","bigcats","instagram","commentforcomment","allguncontrolisracist","guncontrolisbullshit"],
+    ["ig_mexico","lookgoodfeelgood","southoffrance","quarantinelife","allguncontrolisracist","guncontrolisbullshit"]
 
   
   ]
@@ -222,15 +220,17 @@ class ConnectionManager {
 
       await new Promise(resolve => setTimeout(resolve, 5000));
       // Send a Signal to Reset to All Clients 
+      this.current_animation++;
+      if (this.current_animation == this.graphDestinations.length) {
+          this.current_animation = 0;
+      }
+
       for (var ws_index in this.ordered_websockets) {
         this.ordered_websockets[ws_index].send("RESET")
         console.log("Completed Sequential Animatino, Sending Setup and Reset Messages ")
         this.sendSetupMessage(this.ordered_websockets[ws_index],ws_index )
       }
-      this.current_animation++;
-      if (this.current_animation == this.graphDestinations.length) {
-          this.current_animation = 0;
-      }
+
       await new Promise(resolve => setTimeout(resolve, 4000));
       if (this.route == "sequential") {
         // console.log("Animation should now be in progress")
