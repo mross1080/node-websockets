@@ -60,7 +60,7 @@ class ConnectionManager {
 
 
 
-    ["mordorfitness","gymgoals","gym","clean","focus","None","stopthesteal"],
+    ["forgive","believe","maga","magamillionmarch","millionmagamarch","stopthesteal"],
     ["carlruns","betteryourmile","washingtondc","billgatescoronavirus","millionmagamarch","stopthesteal"]
 
   
@@ -102,11 +102,13 @@ class ConnectionManager {
 
         if ((route == "sequential" || (route == "combined")) && this.animationInProgress == false) {
           // Start Messaging
+          console.log("\n\n------STARTING SEQUENTIAL ANIMATION------\n\n")
           this.startSequentialMessageAnimation(userID, ws);
         }
 
        
         setTimeout(function () {
+          console.log("Sending Setup Message to client ", userID)
           this.sendSetupMessage(ws,this.ordered_websockets.length - 1)
         }.bind(this), 1000)
 
@@ -220,11 +222,9 @@ class ConnectionManager {
 
       await new Promise(resolve => setTimeout(resolve, 5000));
       // Send a Signal to Reset to All Clients 
-      // console.log(this.ordered_websockets)
       for (var ws_index in this.ordered_websockets) {
-        // console.log(this.ordered_websockets[ws_index])
         this.ordered_websockets[ws_index].send("RESET")
-        console.log("Reset sending setup")
+        console.log("Completed Sequential Animatino, Sending Setup and Reset Messages ")
         this.sendSetupMessage(this.ordered_websockets[ws_index],ws_index )
       }
       this.current_animation++;
@@ -238,6 +238,7 @@ class ConnectionManager {
       }
 
       if (this.route == "combined") {
+        console.log("\n\n------STARTING WORD TRAVEL ANIMATION------\n\n")
         console.log("\n\n Finished First Cycle Of Sequential, starting word cycle by sending animation to first client",this.routeTable["websocketIds"][0])
         this.sendNextWord(this.routeTable["websocketIds"][0])
       }
@@ -255,10 +256,7 @@ class ConnectionManager {
     //If we get a message like this it means we recieved a done signal, and we want to trigger the next animation
     
     console.log(`Comparing ${this.current_client_index} to this many websockets   ${this.routeTable["websocketIds"].length}`)
-    // if (this.current_client_index == this.routeTable["websocketIds"].length) {
-    //   console.log("Resetting to 0")
-    //   this.current_client_index = 0;
-    // }
+
 
     var current_id = this.routeTable["websocketIds"][this.current_client_index]
     
@@ -290,7 +288,7 @@ class ConnectionManager {
       this.display_sentence_index++
       this.current_client_index++;
       if (this.current_client_index == this.routeTable["websocketIds"].length) {
-        console.log("Resetting to 0")
+        // console.log("Resetting to 0")
         this.current_client_index = 0;
       }
 
