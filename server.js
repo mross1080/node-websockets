@@ -173,12 +173,12 @@ class ConnectionManager {
             }
           } else {
             console.log("")
-            // if (route == "travel" || route == "combined") {
-            //   if (message.split("|")[1] == "DONE") {
-            //     this.processIncomingWordTravelMessage(userID)
+            if (route == "travel") {
+              if (message.split("|")[1] == "DONE") {
+                this.processIncomingWordTravelMessage(userID)
 
-            //   }
-            // }
+              }
+            }
           }
 
 
@@ -238,10 +238,11 @@ class ConnectionManager {
 
       if (this.route == "combined") {
 
-        this.current_animation++;
-        if (this.current_animation == this.graphDestinations.length) {
-          this.current_animation = 0;
-      }
+      //Commented out for testing 
+      //   this.current_animation++;
+      //   if (this.current_animation == this.graphDestinations.length) {
+      //     this.current_animation = 0;
+      // }
 
       for (var ws_index in this.ordered_websockets) {
         this.ordered_websockets[ws_index].send("RESET")
