@@ -106,17 +106,26 @@ class ConnectionManager {
         this.routeTable["websocketIds"].push(userID)
         console.log("Web ids ", this.routeTable["websocketIds"])
 
-        if ((route == "sequential" || (route == "combined")) && this.animationInProgress == false) {
+        if ((route == "sequential" || (route == "combined"))) {
           // Start Messaging
-          console.log("\n\n------STARTING SEQUENTIAL ANIMATION------\n\n")
-          this.startSequentialMessageAnimation(userID, ws);
-        }
 
-
+          
         setTimeout(function () {
           console.log("Sending Setup Message to client ", userID)
           this.sendSetupMessage(ws, this.ordered_websockets.length - 1)
         }.bind(this), 1000)
+
+        
+          if (this.animationInProgress == false) {
+
+            console.log("\n\n------STARTING SEQUENTIAL ANIMATION------\n\n")
+            this.startSequentialMessageAnimation(userID, ws);
+          }
+
+
+        }
+
+
 
 
         if (route == "travel" && !this.word_animation_started) {
