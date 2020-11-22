@@ -129,7 +129,7 @@ class ConnectionManager {
 
 
         if (route == "travel" && !this.word_animation_started) {
-
+          console.log("Starting travel")
           // Start First Animation 
           // Using a timeout just to give the socket extra time to establish connection
           setTimeout(function () {
@@ -212,7 +212,7 @@ class ConnectionManager {
         this.routeTable["websocketIds"] = this.routeTable["websocketIds"].filter(e => e !== userID);
         console.log("Remaining Clients are : " + this.routeTable["websocketIds"])
 
-        if (this.routeTable["websocketIds".length == 0] ) {
+        if (this.ordered_websockets.length == 0 ) {
           this.word_animation_started = false;
         }
 
