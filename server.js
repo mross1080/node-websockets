@@ -46,6 +46,8 @@ class ConnectionManager {
     this.animationInProgress = false;
     this.word_travel_wait_interval = 800
     this.id_lookup = {}
+    this.word_speed = 4
+    this.word_interval_incrementing = true
 
     this.routeTable = {
       "websocketIds": [],
@@ -352,6 +354,21 @@ class ConnectionManager {
       console.log("We've reached the end of the word phrase so Resetting to 0")
       this.display_sentence_index = 0;
       this.current_client_index = 0;
+      if (this.word_interval_incrementing) {
+        this.word_speed+= 8
+      } else {
+        this.word_speed-= 8
+      }
+       
+
+      if (this.word_speed > 60 && this.word_interval_incrementing) {
+        this.word_interval_incrementing = false;
+      }
+
+      
+      if (this.word_speed < 10 && !this.word_interval_incrementing) {
+        this.word_interval_incrementing = true;
+      }
       if (this.route == "combined") {
 
         this.current_animation++;
@@ -389,10 +406,10 @@ class ConnectionManager {
 
         console.log("Telling socket to start", "WORDS|Start|" + this.graphDestinations[this.current_animation][this.display_sentence_index] + " of current index :" + this.current_client_index)
 
-        this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index])
+        this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index] + "|" + this.word_speed)
 
       } else {
-        this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index])
+        this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index] + "|" + this.word_speed )
 
       }
 
