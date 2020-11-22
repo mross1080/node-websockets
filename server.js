@@ -45,7 +45,7 @@ class ConnectionManager {
     this.route = ""
     this.animationInProgress = false;
     this.word_travel_wait_interval = 800
-
+    this.id_lookup = {}
 
     this.routeTable = {
       "websocketIds": [],
@@ -91,12 +91,14 @@ class ConnectionManager {
 
 
       if (this.ordered_websockets[id_to_index] == null) {
+        this.id_lookup[id_to_index] = (this.ordered_websockets.length - 1)
         this.ordered_websockets.push(ws);
       } else {
 
         // If there already exists a client with the wrong ID in a spot, push it to the back then append that bad boy
         this.ordered_websockets.push(this.ordered_websockets[id_to_index])
         this.ordered_websockets[id_to_index] = ws;
+        this.id_lookup[id_to_index] = id_to_index
       }
 
 
@@ -129,7 +131,7 @@ class ConnectionManager {
 
 
         if (route == "travel" && !this.word_animation_started) {
-          console.log("Starting travel")
+          console.log("\n\nStarting travel\n\n")
           // Start First Animation 
           // Using a timeout just to give the socket extra time to establish connection
           setTimeout(function () {
@@ -209,10 +211,14 @@ class ConnectionManager {
           }
         }
 
+        this.ordered_websockets.splice(this.id_lookup[Number(userID)])
+
+        this.word_animation_started = false;
         this.routeTable["websocketIds"] = this.routeTable["websocketIds"].filter(e => e !== userID);
         console.log("Remaining Clients are : " + this.routeTable["websocketIds"])
-
+        console.log("THis many web sockets in ordered web sockets ", this.ordered_websockets.length)
         if (this.ordered_websockets.length == 0 ) {
+          console.log("Reset word animation")
           this.word_animation_started = false;
         }
 
@@ -378,10 +384,12 @@ class ConnectionManager {
       console.log("current client index ", this.current_client_index)
       console.log("Display sentence index ", this.display_sentence_index)
       console.log("current IDS ", this.routeTable["websocketIds"])
-      console.log("Telling socket to start", "WORDS|Start|" + this.graphDestinations[this.current_animation][this.display_sentence_index] + " of current index :" + this.current_client_index)
 
       if (this.route == "travel") {
-              this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index])
+
+        console.log("Telling socket to start", "WORDS|Start|" + this.graphDestinations[this.current_animation][this.display_sentence_index] + " of current index :" + this.current_client_index)
+
+        this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index])
 
       } else {
         this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index])
