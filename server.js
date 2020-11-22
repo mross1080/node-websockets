@@ -44,6 +44,7 @@ class ConnectionManager {
     this.word_animation_started = false;
     this.route = ""
     this.animationInProgress = false;
+    this.word_travel_wait_interval = 800
     
 
     this.routeTable = {
@@ -141,9 +142,7 @@ class ConnectionManager {
           console.log('received from ' + userID + ': ' + message)
 
           if (userID == "ADMIN") {
-            // console.log("ADMINNNNN")
             console.log(`Received message => ${message}`)
-            // console.log('received from ' + userID)
 
             if (route == "travel") {
               console.log("Got a request to update the scrolling words")
@@ -173,13 +172,13 @@ class ConnectionManager {
               }
             }
           } else {
+            console.log("")
+            // if (route == "travel" || route == "combined") {
+            //   if (message.split("|")[1] == "DONE") {
+            //     this.processIncomingWordTravelMessage(userID)
 
-            if (route == "travel" || route == "combined") {
-              if (message.split("|")[1] == "DONE") {
-                this.processIncomingWordTravelMessage(userID)
-
-              }
-            }
+            //   }
+            // }
           }
 
 
@@ -214,6 +213,54 @@ class ConnectionManager {
   }
 
 
+  startWordTravelMessageAnimation(userID, ws) {
+    // console.log("In start sequential ")
+
+
+    this.animationInProgress = true;
+
+
+
+    // console.log("going into async loop Iterating over ", this.routeTable["websocketIds"]);
+    console.log(this.ordered_websockets.length);
+    (async function loop() {
+      console.log("In Async loop sending seq messages to clients")
+      for (let i = 0; i < (this.ordered_websockets.length); i++) {
+        // console.log("At index of promise ", i)
+        await new Promise(resolve => setTimeout(resolve, this.word_travel_wait_interval));
+        this.sendNextWord(this.ordered_websockets[i],i)
+
+      }
+      console.log("Done sending Word Travel messages")
+      // await new Promise(resolve => setTimeout(resolve, 5000));
+      // This promise is here to leave the photos up for a specified amount of time
+      await new Promise(resolve => setTimeout(resolve, 4000));
+
+      if (this.route == "combined") {
+
+        this.current_animation++;
+        if (this.current_animation == this.graphDestinations.length) {
+          this.current_animation = 0;
+      }
+
+      for (var ws_index in this.ordered_websockets) {
+        this.ordered_websockets[ws_index].send("RESET")
+        console.log("Completed Sequential Animatino, Sending Setup and Reset Messages ")
+        this.sendSetupMessage(this.ordered_websockets[ws_index],ws_index )
+      }
+        console.log("reached the end of the sentence so starting Sequential ")
+        this.sequence_active = false;
+        this.startSequentialMessageAnimation(this.userID, this.ordered_websockets[0]);
+
+        return;
+      }
+
+
+    }.bind(this))();
+
+  }
+
+
   startSequentialMessageAnimation(userID, ws) {
     // console.log("In start sequential ")
 
@@ -244,7 +291,9 @@ class ConnectionManager {
       if (this.route == "combined") {
         console.log("\n\n------STARTING WORD TRAVEL ANIMATION------\n\n")
         console.log("\n\n Finished First Cycle Of Sequential, starting word cycle by sending animation to first client",this.routeTable["websocketIds"][0])
-        this.sendNextWord(this.routeTable["websocketIds"][0])
+        this.startWordTravelMessageAnimation(userID, ws);
+        
+        // this.sendNextWord(this.routeTable["websocketIds"][0])
       }
 
 
@@ -296,7 +345,7 @@ class ConnectionManager {
 
 
   }
-  sendNextWord(userID) {
+  sendNextWord(userID,word_index) {
     if (this.display_sentence.length > 0) {
       console.log("On hashtag animation ", this.current_animation)
       console.log("current client index ", this.current_client_index)
@@ -306,7 +355,7 @@ class ConnectionManager {
      
       // This is for previous functionality that may be used for another project so don't delete 
      // this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index])
-      this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][this.display_sentence_index])
+      this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index])
 
       this.display_sentence_index++
       this.current_client_index++;
