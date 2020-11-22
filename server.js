@@ -115,7 +115,7 @@ class ConnectionManager {
           this.sendSetupMessage(ws, this.ordered_websockets.length - 1)
         }.bind(this), 1000)
 
-        
+
           if (this.animationInProgress == false) {
 
             console.log("\n\n------STARTING SEQUENTIAL ANIMATION------\n\n")
@@ -211,6 +211,10 @@ class ConnectionManager {
 
         this.routeTable["websocketIds"] = this.routeTable["websocketIds"].filter(e => e !== userID);
         console.log("Remaining Clients are : " + this.routeTable["websocketIds"])
+
+        if (this.routeTable["websocketIds".length == 0] ) {
+          this.word_animation_started = false;
+        }
 
       }.bind(this));
     }.bind(this));
