@@ -62,11 +62,11 @@ class ConnectionManager {
 
 
 
-      ["goodvibes","monday","jagd","djt","potustrump","democratsdestroyamerica"],
+      ["goodvibes", "monday", "jagd", "djt", "potustrump", "democratsdestroyamerica"],
 
-      ["tiktokstar","arbu11","mashallah","election","trump2020landslide","democratsdestroyamerica"],
+      ["tiktokstar", "arbu11", "mashallah", "election", "trump2020landslide", "democratsdestroyamerica"],
 
-      ["sly","slystallone","godblessamerica","conservative","redpill","democratsdestroyamerica"],
+      ["sly", "slystallone", "godblessamerica", "conservative", "redpill", "democratsdestroyamerica"],
 
       ["ocelot", "bigcats", "instagram", "commentforcomment", "allguncontrolisracist", "guncontrolisbullshit"],
       ["ig_mexico", "lookgoodfeelgood", "southoffrance", "quarantinelife", "allguncontrolisracist", "guncontrolisbullshit"]
@@ -120,11 +120,11 @@ class ConnectionManager {
         if ((route == "sequential" || (route == "combined"))) {
           // Start Messaging
 
-          
-        setTimeout(function () {
-          console.log("Sending Setup Message to client ", userID)
-          this.sendSetupMessage(ws, this.ordered_websockets.length - 1)
-        }.bind(this), 1000)
+
+          setTimeout(function () {
+            console.log("Sending Setup Message to client ", userID)
+            this.sendSetupMessage(ws, this.ordered_websockets.length - 1)
+          }.bind(this), 1000)
 
 
           if (this.animationInProgress == false) {
@@ -214,19 +214,23 @@ class ConnectionManager {
         console.log('Client disconnected : ' + userID)
 
         // We're doing this because even though there is an order it isn't forced 
-        for (var index of this.ordered_websockets) {
-          if (userID == this.ordered_websockets[index]) {
-            this.ordered_websockets.filter(e => e !== this.ordered_websockets[index])
-          }
-        }
+        // for (var index of this.ordered_websockets) {
+        //   if (userID == this.ordered_websockets[index]) {
+        //     this.ordered_websockets.filter(e => e !== this.ordered_websockets[index])
+        //   }
+        // }
 
-        this.ordered_websockets.splice(this.id_lookup[Number(userID)])
+        // Maybe for a different use case
+        // this.ordered_websockets.splice(this.id_lookup[Number(userID)])
+        console.log("removing", userID)
+        this.ordered_websockets[userID] = false
+        debugger;
 
         this.word_animation_started = false;
-        this.routeTable["websocketIds"] = this.routeTable["websocketIds"].filter(e => e !== userID);
+        // this.routeTable["websocketIds"] = this.routeTable["websocketIds"].filter(e => e !== userID);
         console.log("Remaining Clients are : " + this.routeTable["websocketIds"])
         console.log("THis many web sockets in ordered web sockets ", this.ordered_websockets.length)
-        if (this.ordered_websockets.length == 0 ) {
+        if (this.ordered_websockets.length == 0) {
           console.log("Reset word animation")
           this.word_animation_started = false;
         }
@@ -236,6 +240,7 @@ class ConnectionManager {
   }
 
   sendSetupMessage(ws, word_index) {
+
     ws.send("SETUP" + "|" + this.graphDestinations[this.current_animation][this.graphDestinations[this.current_animation].length - 1] + "|" + this.graphDestinations[this.current_animation][word_index])
 
   }
@@ -275,9 +280,16 @@ class ConnectionManager {
         // }
 
         for (var ws_index in this.ordered_websockets) {
-          this.ordered_websockets[ws_index].send("RESET")
+
+          if (this.ordered_websockets[ws_index]) {
+            this.ordered_websockets[ws_index].send("RESET")
+
+          }
           console.log("Completed Sequential Animatino, Sending Setup and Reset Messages ")
-          this.sendSetupMessage(this.ordered_websockets[ws_index], ws_index)
+          if (this.ordered_websockets[ws_index]) {
+            this.sendSetupMessage(this.ordered_websockets[ws_index], ws_index)
+          }
+
         }
         console.log("reached the end of the sentence so starting Sequential ")
         this.sequence_active = false;
@@ -318,7 +330,10 @@ class ConnectionManager {
       await new Promise(resolve => setTimeout(resolve, 1000));
       if (this.route == "sequential") {
         for (var ws_index in this.ordered_websockets) {
-          this.ordered_websockets[ws_index].send("RESET")
+          if (this.ordered_websockets[ws_index]) {
+            this.ordered_websockets[ws_index].send("RESET")
+          }
+
           console.log("Completed Sequential Animatino, Sending Setup and Reset Messages ")
           this.sendSetupMessage(this.ordered_websockets[ws_index], ws_index)
         }
@@ -343,6 +358,7 @@ class ConnectionManager {
 
   }
 
+  // Method use for Travel and I animations 
   processIncomingWordTravelMessage(userID) {
 
     console.log("Completed Animation for Connection ID : ", userID)
@@ -362,17 +378,17 @@ class ConnectionManager {
       this.display_sentence_index = 0;
       this.current_client_index = 0;
       if (this.word_interval_incrementing) {
-        this.word_speed+= 8
+        this.word_speed += 8
       } else {
-        this.word_speed-= 8
+        this.word_speed -= 8
       }
-       
+
 
       if (this.word_speed > 60 && this.word_interval_incrementing) {
         this.word_interval_incrementing = false;
       }
 
-      
+
       if (this.word_speed < 10 && !this.word_interval_incrementing) {
         this.word_interval_incrementing = true;
       }
@@ -384,9 +400,15 @@ class ConnectionManager {
         }
 
         for (var ws_index in this.ordered_websockets) {
-          this.ordered_websockets[ws_index].send("RESET")
+
+          if (this.ordered_websockets[ws_index]) {
+            this.ordered_websockets[ws_index].send("RESET")
+          }
+
           console.log("Completed Sequential Animatino, Sending Setup and Reset Messages ")
-          this.sendSetupMessage(this.ordered_websockets[ws_index], ws_index)
+          if (this.ordered_websockets[ws_index]) {
+            this.sendSetupMessage(this.ordered_websockets[ws_index], ws_index)
+          }
         }
         console.log("reached the end of the sentence so starting Sequential ")
         this.sequence_active = false;
@@ -416,7 +438,9 @@ class ConnectionManager {
         this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index] + "|" + this.word_speed)
 
       } else {
-        this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index] + "|" + this.word_speed )
+        if (this.ordered_websockets[this.current_client_index] != false)  {
+          this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index] + "|" + this.word_speed)
+        }
 
       }
 
@@ -435,10 +459,15 @@ class ConnectionManager {
 
   broadcastMessageToClient(current_index) {
 
-    console.log("Broadcasting message to client for SEQ current index is ", current_index)
+    console.log("Broadcasting message "+ this.graphDestinations[this.current_animation][current_index] + " to client for SEQ current index is ", current_index)
+
     // console.log("current id of seq animation ", this.routeTable["websocketIds"][current_index])
     // this.ordered_websockets[current_index].send("IMGS" + "|" + current_index + "|" + this.photoTimeout + "|" + current_index)
-    this.ordered_websockets[current_index].send("IMGS" + "|" + current_index + "|" + this.photoTimeout + "|" + this.graphDestinations[this.current_animation][current_index])
+
+    if (this.ordered_websockets[current_index] != false) {
+      this.ordered_websockets[current_index].send("IMGS" + "|" + current_index + "|" + this.photoTimeout + "|" + this.graphDestinations[this.current_animation][current_index])
+
+    }
 
 
 
