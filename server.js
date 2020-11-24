@@ -34,7 +34,7 @@ class ConnectionManager {
     this.display_sentence = ["These", "Are", "My", "Twisted", "Words", "!!!!!!!!!!"]
     this.display_sentence_index = 0
     this.photoTimeout = 3000
-    this.ordered_websockets = []
+    this.ordered_websockets = [false,false,false,false,false,false]
     this.sequential_interval = 2000
     this.timer = new Timer()
     this.sequence_active = false
@@ -93,29 +93,32 @@ class ConnectionManager {
       console.log(route)
       // console.log(ws)
       console.log('Client connected');
-      console.log("User ID : " + userID)
+      console.log("User ID : " + Number(userID))
       this.broadcastTimer.start({ countdown: true, startValues: { seconds: 3 } });
 
-      var id_to_index = Number(userID);
+      var id_to_index = userID
+      this.ordered_websockets[id_to_index] = ws
+      this.id_lookup[id_to_index] = id_to_index
+      console.log(this.id_lookup[id_to_index])
 
+      // if (this.ordered_websockets[id_to_index] == null) {
+      //   this.id_lookup[id_to_index] = (this.ordered_websockets.length - 1)
+      //   this.ordered_websockets.push(ws);
+      // } 
 
-      if (this.ordered_websockets[id_to_index] == null) {
-        this.id_lookup[id_to_index] = (this.ordered_websockets.length - 1)
-        this.ordered_websockets.push(ws);
-      } else {
-
+      // THis would be if you want anyone to be in the order, i want to be strict
         // If there already exists a client with the wrong ID in a spot, push it to the back then append that bad boy
-        this.ordered_websockets.push(this.ordered_websockets[id_to_index])
-        this.ordered_websockets[id_to_index] = ws;
-        this.id_lookup[id_to_index] = id_to_index
-      }
+        // this.ordered_websockets.push(this.ordered_websockets[id_to_index])
+        // this.ordered_websockets[id_to_index] = ws;
+        // this.id_lookup[id_to_index] = id_to_index
+      
 
 
       //The Main Route for Incoming Clients to recieve register and start loops
       if (userID != null && userID != "ADMIN") {
         this.routeTable["websockets"][userID] = ws
         this.routeTable["websocketIds"].push(userID)
-        console.log("Web ids ", this.routeTable["websocketIds"])
+        console.log("Web ids ", this.id_lookup)
 
         if ((route == "sequential" || (route == "combined"))) {
           // Start Messaging
@@ -318,6 +321,7 @@ class ConnectionManager {
     console.log(this.ordered_websockets.length);
     (async function loop() {
       console.log("In Async loop sending seq messages to clients")
+      console.log("IDS ", this.id_lookup)
       for (let i = 0; i < (this.ordered_websockets.length); i++) {
         // console.log("At index of promise ", i)
         await new Promise(resolve => setTimeout(resolve, this.sequential_interval));
@@ -429,7 +433,7 @@ class ConnectionManager {
       console.log("On hashtag animation ", this.current_animation)
       console.log("current client index ", this.current_client_index)
       console.log("Display sentence index ", this.display_sentence_index)
-      console.log("current IDS ", this.routeTable["websocketIds"])
+      console.log("current IDS ", this.id_lookup)
 
       if (this.route == "travel") {
 
@@ -439,7 +443,7 @@ class ConnectionManager {
 
       } else {
         if (this.ordered_websockets[this.current_client_index] != false)  {
-          this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index] + "|" + this.word_speed)
+          this.ordered_websockets[word_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index] + "|" + this.word_speed)
         }
 
       }
