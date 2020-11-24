@@ -442,7 +442,7 @@ class ConnectionManager {
         this.ordered_websockets[this.current_client_index].send("WORDS|Start|" + this.display_sentence[this.display_sentence_index] + "|" + this.word_speed)
 
       } else {
-        if (this.ordered_websockets[this.current_client_index] != false)  {
+        if (this.ordered_websockets[word_index] != false)  {
           this.ordered_websockets[word_index].send("WORDS|Start|" + this.graphDestinations[this.current_animation][word_index] + "|" + this.word_speed)
         }
 
