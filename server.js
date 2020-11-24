@@ -61,6 +61,13 @@ class ConnectionManager {
     this.graphDestinations = [
 
 
+
+      ["goodvibes","monday","jagd","djt","potustrump","democratsdestroyamerica"],
+
+      ["tiktokstar","arbu11","mashallah","election","trump2020landslide","democratsdestroyamerica"],
+
+      ["sly","slystallone","godblessamerica","conservative","redpill","democratsdestroyamerica"],
+
       ["ocelot", "bigcats", "instagram", "commentforcomment", "allguncontrolisracist", "guncontrolisbullshit"],
       ["ig_mexico", "lookgoodfeelgood", "southoffrance", "quarantinelife", "allguncontrolisracist", "guncontrolisbullshit"]
 
